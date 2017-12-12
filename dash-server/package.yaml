@@ -1,0 +1,50 @@
+name: dash-server
+version: 0.1.0
+synopsis: Server for Dash
+description: Please see the README on Github at <https://github.com/githubuser/studienarbeit-dash#readme>
+maintainer: Benedikt Friedrich
+license-file: LICENSE
+github: https://github.com/ob-fun-ws17/studienarbeit-dash
+category: Education
+  - README.md
+
+ghc-options: -Wall
+
+dependencies:
+  - base  >= 4.8 && < 5
+  - aeson
+  - servant-server
+  - text
+  - wai
+  - warp
+  - optparse-applicative
+  - mtl
+  - directory
+  - time
+  - bytestring
+  - containers
+  - yaml
+
+library:
+  source-dirs: src
+
+executables:
+  dash-server:
+    main: Dash-Server.hs
+    source-dirs: app
+    dependencies:
+    - dash-server
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+      - src
+    dependencies:
+      - dash-server
+      - hspec
+      - hspec-wai
+      - hspec-wai-json
+      - HUnit >= 1.5.0.0
+      - QuickCheck
