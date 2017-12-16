@@ -12,7 +12,9 @@ ghc-options: -Wall
 
 dependencies:
   - base  >= 4.8 && < 5
+  - ghc
   - aeson
+  - servant
   - servant-server
   - text
   - wai
@@ -24,6 +26,10 @@ dependencies:
   - bytestring
   - containers
   - yaml
+  - persistent
+  - monad-logger
+  - persistent-sqlite
+  - persistent-template
 
 library:
   source-dirs: src
