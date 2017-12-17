@@ -25,7 +25,7 @@ import           Network.Wai.Handler.Warp
 
 import           Servant
 
-import           Types
+import           Entity
 
 
 startApp :: Int -> IO ()
