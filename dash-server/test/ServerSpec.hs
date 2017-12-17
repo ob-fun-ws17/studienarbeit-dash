@@ -7,7 +7,7 @@ import           Test.Hspec
 import           Test.Hspec.Wai
 
 spec :: Spec
-spec = with (return app) $
+spec = with (return $ app undefined) $
     describe "GET /test" $ do
         it "200" $
             get "/test" `shouldRespondWith` 200
