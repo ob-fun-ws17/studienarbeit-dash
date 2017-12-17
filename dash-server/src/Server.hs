@@ -72,7 +72,7 @@ server pool =
     testGetJSON param =
       case param of
         Just a -> do
-          maybeTest <- runDb (selectFirst [TestTestString ==. a] []) pool
+          maybeTest <- runDb (selectFirst [TestString ==. a] []) pool
           case maybeTest of
             Just test -> return $ entityVal test
             Nothing   -> throwError err404

@@ -11,19 +11,14 @@
 
 module Types where
 
-import           Data.Aeson
+import           Data.Aeson.TH
 import           Database.Persist.TH
 import           GHC.Generics
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+share [mkPersist sqlSettings {mpsPrefixFields = False}, mkMigrate "migrateAll"] [persistLowerCase|
 Test
   testString String
   deriving Eq Read Show Generic
 |]
 
-instance ToJSON Test where
-  toJSON (Test testString) =
-    object ["testString" .= testString]
-
-
-instance FromJSON Test
+deriveJSON defaultOptions ''Test
