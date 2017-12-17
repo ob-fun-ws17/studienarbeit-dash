@@ -1,20 +1,13 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeOperators              #-}
-
-{-# LANGUAGE EmptyDataDecls             #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module Server
   ( startApp
@@ -24,25 +17,16 @@ module Server
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger     (runStderrLoggingT)
 
-
-import           Data.Aeson
-import           GHC.Generics
-
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite
-import           Database.Persist.TH
 
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 
 import           Servant
 
+import           Types
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Test
-  testString String
-  deriving Eq Read Show Generic
-|]
 
 startApp :: Int -> IO ()
 startApp port = do
@@ -62,14 +46,6 @@ type API =
              :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
              :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-
-
-instance ToJSON Test where
-  toJSON (Test testString) =
-    object ["testString" .= testString]
-
-
-instance FromJSON Test where
 
 
 server :: ConnectionPool -> Server API
@@ -107,34 +83,3 @@ api = Proxy
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool
-
-
-
-
-
--- import           Network.Wai
--- import           Network.Wai.Handler.Warp
--- import           Servant
---
--- type API = "test" :> Get '[JSON] Test
---
--- data Test = Test
---   { testString :: String
---   } deriving (Eq, Show, Generic)
---
--- instance ToJSON Test
---
--- server :: Server API
--- server = test
-  -- where
-  --   test :: Handler Test
-  --   test = return (Test "It works!")
---
--- api :: Proxy API
--- api = Proxy
---
--- -- 'serve' comes from servant and hands you a WAI Application,
--- -- which you can think of as an "abstract" web application,
--- -- not yet a webserver.
--- app :: Application
--- app = serve api server
