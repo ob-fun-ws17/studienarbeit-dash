@@ -11,21 +11,28 @@ module Entity where
 
 import           Data.Aeson.TH
 import           Data.Text           as Text
+import           Data.Time
 import           Database.Persist.TH
 import           GHC.Generics
 
 import           Types
 
-share [mkPersist sqlSettings {mpsPrefixFields = False}, mkMigrate "migrateAll"] [persistLowerCase|
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Test
   testString String
   deriving Eq Read Show Generic
+Category
+  category String
+  deriving Eq Read Show Generic
 Todo
   context Text
-  status String
-  category String
+  status Status
+  category CategoryId
   priority Priority
+  deadline Day
+  duration Int
+  created UTCTime default=CURRENT_TIME
   deriving Eq Read Show Generic
 |]
 
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Todo]
+Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Todo, ''Category]

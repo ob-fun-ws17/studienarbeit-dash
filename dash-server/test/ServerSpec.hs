@@ -12,4 +12,4 @@ spec = with (return $ app undefined) $
         it "200" $
             get "/test" `shouldRespondWith` 200
         it "check response" $
-            get "/test" `shouldRespondWith` "{\"testString\":\"It works!\"}"
+            get "/test" `shouldRespondWith` "{\"testTestString\":\"It works!\"}"
