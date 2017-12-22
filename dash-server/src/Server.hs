@@ -37,8 +37,8 @@ startApp port = do
   run port $ app pool
 
 
-runDb :: SqlPersistT IO b -> ConnectionPool -> Handler b
-runDb query pool = liftIO $ runSqlPool query pool
+runDb :: ConnectionPool -> SqlPersistT IO b -> Handler b
+runDb pool query = liftIO $ runSqlPool query pool
 
 
 type API =
@@ -48,6 +48,7 @@ type API =
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
              :<|> "addTodo" :> ReqBody '[JSON] Todo :> Post '[JSON] (Key Todo)
              :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
+
 server :: ConnectionPool -> Server API
 server pool =
        test
@@ -62,19 +63,19 @@ server pool =
     test = return (Test "It works!")
 
     testAddJSON :: Test -> Handler (Key Test)
-    testAddJSON testJson = runDb (insert testJson) pool
+    testAddJSON testJson = runDb pool $ insert testJson
 
     testAddParam :: Maybe String -> Handler String
     testAddParam testParam =
       case testParam of
-        Just a  -> fmap (show . fromSqlKey ) (runDb  (insert (Test a))  pool)
+        Just a  -> fmap (show . fromSqlKey ) (runDb pool (insert $ Test a))
         Nothing -> throwError err404
   --
     testGetJSON :: Maybe String -> Handler (Test)
     testGetJSON param =
       case param of
         Just a -> do
-          maybeTest <- runDb (selectFirst [TestTestString ==. a] []) pool
+          maybeTest <- runDb pool (selectFirst [TestTestString ==. a] [])
           case maybeTest of
             Just test -> return $ entityVal test
             Nothing   -> throwError err404
@@ -82,12 +83,12 @@ server pool =
         Nothing -> throwError err404
 
     addTodo :: Todo -> Handler (Key Todo)
-    addTodo x = runDb (insert x)  pool
+    addTodo x = runDb pool $ insert x
 
     addCategory :: Maybe String -> Handler (Key Category)
     addCategory param =
       case param of
-        Just a  -> runDb (insert (Category a)) pool
+        Just a  -> runDb pool $ insert $ Category a
         Nothing -> throwError err404
 
 api :: Proxy API
