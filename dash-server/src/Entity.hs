@@ -23,6 +23,7 @@ Test
   deriving Eq Read Show Generic
 Category
   category String
+  Unique CategoryU category
   deriving Eq Read Show Generic
 Todo
   context Text
@@ -31,7 +32,6 @@ Todo
   priority Priority
   deadline Day
   duration Int
-  created UTCTime default=CURRENT_TIME
   deriving Eq Read Show Generic
 |]
 

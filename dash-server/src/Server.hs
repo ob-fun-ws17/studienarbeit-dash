@@ -46,14 +46,16 @@ type API =
              :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
              :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-
-
+             :<|> "addTodo" :> ReqBody '[JSON] Todo :> Post '[JSON] (Key Todo)
+             :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
 server :: ConnectionPool -> Server API
 server pool =
        test
   :<|> testAddJSON
   :<|> testAddParam
   :<|> testGetJSON
+  :<|> addTodo
+  :<|> addCategory
 
   where
     test :: Handler Test
@@ -78,6 +80,16 @@ server pool =
             Nothing   -> throwError err404
 
         Nothing -> throwError err404
+
+    addTodo :: Todo -> Handler (Key Todo)
+    addTodo x = runDb (insert x)  pool
+
+    addCategory :: Maybe String -> Handler (Key Category)
+    addCategory param =
+      case param of
+        Just a  -> runDb (insert (Category a)) pool
+        Nothing -> throwError err404
+
 api :: Proxy API
 api = Proxy
 
