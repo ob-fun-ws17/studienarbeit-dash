@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -11,12 +10,13 @@
 
 module Server
   ( startApp
+  , initApp
   , app
   ) where
 
-import           Control.Monad.IO.Class
 import           Control.Monad.Logger     (runStderrLoggingT)
 
+import           Data.String.Conversions
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite
 
@@ -26,20 +26,19 @@ import           Network.Wai.Handler.Warp
 import           Servant
 
 import           Entity
+import           Todo
 
+startApp :: FilePath -> Int -> IO ()
+startApp file port =
+  run port =<< initApp file
 
-startApp :: Int -> IO ()
-startApp port = do
+initApp :: FilePath -> IO Application
+initApp file = do
   pool <- runStderrLoggingT $
-    createSqlitePool "dash.db" 5
+    createSqlitePool (cs file) 5
 
   runSqlPool (runMigration migrateAll) pool
-  run port $ app pool
-
-
-runDb :: ConnectionPool -> SqlPersistT IO b -> Handler b
-runDb pool query = liftIO $ runSqlPool query pool
-
+  return $ app pool
 
 type API =
              "test" :> Get '[JSON] (Test)
@@ -48,6 +47,7 @@ type API =
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
              :<|> "addTodo" :> ReqBody '[JSON] Todo :> Post '[JSON] (Key Todo)
              :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
+             :<|> "todo" :> TodoAPI
 
 server :: ConnectionPool -> Server API
 server pool =
@@ -57,6 +57,7 @@ server pool =
   :<|> testGetJSON
   :<|> addTodo
   :<|> addCategory
+  :<|> todoServer pool
 
   where
     test :: Handler Test
