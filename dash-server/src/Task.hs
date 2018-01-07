@@ -9,7 +9,6 @@ module Task
   ) where
 
 import           Data.String
-import qualified Data.Text            as Tx
 import           Database.Persist.Sql
 import           Entity
 import           Servant
