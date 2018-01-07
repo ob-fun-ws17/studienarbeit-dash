@@ -32,6 +32,10 @@ Category
   category String
   Unique CategoryU category
   deriving Eq Read Show Generic
+Task
+  name String
+  dependency [TaskId]
+  deriving Eq Read Show Generic
 Todo
   context Text
   status Status
@@ -42,7 +46,7 @@ Todo
   deriving Eq Read Show Generic
 |]
 
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Todo, ''Category]
+Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Task, ''Todo, ''Category]
 
 runDb :: ConnectionPool -> SqlPersistT IO b -> Handler b
 runDb pool query = liftIO $ runSqlPool query pool
