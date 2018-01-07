@@ -45,9 +45,8 @@ type API =
              :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
              :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-             :<|> "addTodo" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
              :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
-             :<|> "todo" :> TodoAPI
+             :<|> TodoAPI
 
 server :: ConnectionPool -> Server API
 server pool =
@@ -55,7 +54,6 @@ server pool =
   :<|> testAddJSON
   :<|> testAddParam
   :<|> testGetJSON
-  :<|> addTodo
   :<|> addCategory
   :<|> todoServer pool
 
@@ -82,9 +80,6 @@ server pool =
             Nothing   -> throwError err404
 
         Nothing -> throwError err404
-
-    addTodo :: Todo -> Handler (Key Todo)
-    addTodo x = runDb pool $ insert x
 
     addCategory :: Maybe String -> Handler (Key Category)
     addCategory param =
