@@ -18,11 +18,17 @@ spec = do
   with (withApp) $ do
 
     describe "/task" $ do
-        it "return only over deadline" $ do
-          request methodGet "/task/add" jsonHeader (pack "{\"taskName\":\"a\"}")
-            `shouldRespondWith` "1"
-          request methodGet "/task/add" jsonHeader (pack "{\"taskName\":\"b\"}")
-            `shouldRespondWith` "2"
+        it "add with dependencies ok" $ do
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
+            `shouldRespondWith` 200
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
+            `shouldRespondWith` 200
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,2]}")
+            `shouldRespondWith` "[{\"dependencyParent\":1,\"dependencyChild\":3},{\"dependencyParent\":2,\"dependencyChild\":3}]"
+        it "add with dependencies not ok" $
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1]}")
+            `shouldRespondWith` "unsatisfiedDeps: [1]" {matchStatus = 406}
+
 
 jsonHeader :: RequestHeaders
 jsonHeader = [(hContentType , "application/json")]

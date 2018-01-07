@@ -22,4 +22,9 @@ data Priority = Low | Middle | High
   deriving (Show, Read, Eq, Ord, Generic)
 derivePersistField "Priority"
 
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Priority, ''Status]
+data Task = Task
+  { name         :: String
+  , dependencies :: [Int]
+  } deriving (Show, Read, Eq, Ord, Generic)
+
+Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Task, ''Priority, ''Status]

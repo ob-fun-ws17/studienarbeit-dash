@@ -32,12 +32,12 @@ Category
   category String
   Unique CategoryU category
   deriving Eq Read Show Generic
-Task
+DbTask
   name String
   deriving Eq Read Show Generic
 Dependency
-  parent TaskId
-  child TaskId
+  parent DbTaskId
+  child DbTaskId
   UniqueD parent child
 Todo
   context Text
@@ -49,7 +49,7 @@ Todo
   deriving Eq Read Show Generic
 |]
 
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Task, ''Todo, ''Category]
+Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Dependency, ''DbTask, ''Todo, ''Category]
 
 runDb :: ConnectionPool -> SqlPersistT IO b -> Handler b
 runDb pool query = liftIO $ runSqlPool query pool
