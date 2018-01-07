@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module TodoSpec (spec) where
 
@@ -12,26 +13,55 @@ module TodoSpec (spec) where
 -- import           Servant.API
 -- import           Servant.Client
 
+
+import           Data.ByteString.Lazy.Char8
+import           Data.String
+import           Data.Time
+import           Network.HTTP.Types.Header
+import           Network.HTTP.Types.Method
 import           Servant
-import           Server                 (initApp)
+import           Server                     (initApp)
 import           Test.Hspec
 import           Test.Hspec.Wai
 import           Test.Mockery.Directory
+import           Todo                       (checkTodoDeadline', getToday)
 
 
 spec :: Spec
-spec = with (withApp) $
-    describe "/todo" $ do
+spec = do
 
+
+  with (withApp) $ do
+
+    describe "/todo" $ do
         it "GET todo" $
             get "/todo" `shouldRespondWith` "[]"
         it "ADD category" $ do
           post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
---         it "ADD todo" $ do
---           post "/todo" "{\"todoContext\":\"Text\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\"2017-12-12\",\"todoDuration\":1,\"todoCreated\":null}"
---               `shouldRespondWith` "1"
---         it "GET todo" $
---             get "/todo" `shouldRespondWith` "[]"
+        it "return only over deadline" $ do
+          post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
+          today <- liftIO getToday
+          yesterday <- liftIO $ fmap (addDays (-1)) getToday
+          request methodGet "/addTodo" jsonHeader (pack (testTodoOfDay yesterday))
+            `shouldRespondWith` "1"
+          request methodGet "/addTodo" jsonHeader (pack (testTodoOfDay today))
+            `shouldRespondWith` "2"
+          get "/todo/check" `shouldRespondWith` fromString ("[{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
+            ++ showGregorian yesterday ++ "\",\"todoDuration\":1}]")
+
+  describe "checkTodoDeadline" $ do
+    it "no Todos" $ do
+      today <- liftIO getToday
+      checkTodoDeadline' [] today `shouldBe` []
+
+
+
+testTodoOfDay :: Day -> String
+testTodoOfDay day = "{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
+               ++ showGregorian day ++ "\",\"todoDuration\":1}"
+
+jsonHeader :: RequestHeaders
+jsonHeader = [(hContentType , "application/json")]
 
 withApp :: IO Application
 withApp = inTempDirectory $ initApp "test.db"

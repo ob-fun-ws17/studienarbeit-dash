@@ -45,7 +45,7 @@ type API =
              :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
              :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-             :<|> "addTodo" :> ReqBody '[JSON] Todo :> Post '[JSON] (Key Todo)
+             :<|> "addTodo" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
              :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
              :<|> "todo" :> TodoAPI
 

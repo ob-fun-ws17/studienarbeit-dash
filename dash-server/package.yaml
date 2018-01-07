@@ -50,6 +50,7 @@ tests:
       - src
     dependencies:
       - dash-server
+      - http-types
       - hspec
       - hspec-wai
       - hspec-wai-json
