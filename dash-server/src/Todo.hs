@@ -16,18 +16,24 @@ import           Servant
 
 import           Entity
 
-type TodoAPI =
-       Get '[JSON] [Todo]
+type TodoAPI = "todo" :>
+  (     Get '[JSON] [Todo]
+  :<|> "add" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
   :<|> Capture "id" TodoId :>  Get '[JSON] Todo
   :<|> "check" :> Get '[JSON] [Todo]
+  )
 
 todoServer :: ConnectionPool -> Server TodoAPI
 todoServer pool = getAllTodos
+             :<|> addTodo
              :<|> getTodo
              :<|> checkTodoDeadline
   where
     getAllTodos :: Handler [Todo]
     getAllTodos = loadAllTodos pool
+
+    addTodo :: Todo -> Handler (Key Todo)
+    addTodo x = runDb pool $ insert x
 
     getTodo :: TodoId -> Handler Todo
     getTodo todoId = do

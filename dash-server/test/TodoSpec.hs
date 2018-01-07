@@ -42,9 +42,9 @@ spec = do
           post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
           today <- liftIO getToday
           yesterday <- liftIO $ fmap (addDays (-1)) getToday
-          request methodGet "/addTodo" jsonHeader (pack (testTodoOfDay yesterday))
+          request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay yesterday))
             `shouldRespondWith` "1"
-          request methodGet "/addTodo" jsonHeader (pack (testTodoOfDay today))
+          request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay today))
             `shouldRespondWith` "2"
           get "/todo/check" `shouldRespondWith` fromString ("[{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
             ++ showGregorian yesterday ++ "\",\"todoDuration\":1}]")
