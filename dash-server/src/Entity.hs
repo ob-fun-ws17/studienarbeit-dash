@@ -34,7 +34,6 @@ Category
   deriving Eq Read Show Generic
 Task
   name String
-  dependency [TaskId]
   deriving Eq Read Show Generic
 Todo
   context Text

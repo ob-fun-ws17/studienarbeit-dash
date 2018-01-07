@@ -26,6 +26,7 @@ import           Network.Wai.Handler.Warp
 import           Servant
 
 import           Entity
+import           Task
 import           Todo
 
 startApp :: FilePath -> Int -> IO ()
@@ -47,6 +48,7 @@ type API =
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
              :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
              :<|> TodoAPI
+             :<|> TaskAPI
 
 server :: ConnectionPool -> Server API
 server pool =
@@ -56,6 +58,7 @@ server pool =
   :<|> testGetJSON
   :<|> addCategory
   :<|> todoServer pool
+  :<|> taskServer pool
 
   where
     test :: Handler Test
