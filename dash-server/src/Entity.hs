@@ -35,6 +35,10 @@ Category
 Task
   name String
   deriving Eq Read Show Generic
+Dependency
+  parent TaskId
+  child TaskId
+  UniqueD parent child
 Todo
   context Text
   status Status
