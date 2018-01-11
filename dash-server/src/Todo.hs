@@ -21,6 +21,8 @@ module Todo
   ) where
 
 import           Control.Monad.IO.Class
+import           Data.Int
+import           Data.Maybe
 import           Data.Time
 import           Database.Persist.Sql
 import           Servant
@@ -32,7 +34,8 @@ import           Entity
 type TodoAPI = "todo" :>
   (     Get '[JSON] [Todo]
   :<|> "add" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
-  :<|> Capture "id" TodoId :>  Get '[JSON] Todo
+  :<|> Capture "id" Int64 :>  Get '[JSON] Todo
+  :<|> "remove" :> Capture "id" Int64 :> Get '[JSON] ()
   :<|> "check" :> Get '[JSON] [Todo]
   )
 
@@ -42,6 +45,7 @@ todoServer :: ConnectionPool -- ^ the pool of database connections to be used
 todoServer pool = getAllTodos
              :<|> addTodo
              :<|> getTodo
+             :<|> removeTodo
              :<|> checkTodoDeadline
   where
     getAllTodos :: Handler [Todo]
@@ -50,12 +54,19 @@ todoServer pool = getAllTodos
     addTodo :: Todo -> Handler (Key Todo)
     addTodo x = runDb pool $ insert x
 
-    getTodo :: TodoId -> Handler Todo
+    getTodo :: Int64 -> Handler Todo
     getTodo todoId = do
-      maybeTodo <- runDb pool $ get todoId
+      maybeTodo <- runDb pool $ get $ toSqlKey todoId
       case maybeTodo of
         Just a  -> return a
         Nothing -> throwError err404
+
+    removeTodo :: Int64 -> Handler ()
+    removeTodo todoId = do
+      maybeTodo <- runDb pool $ get (toSqlKey todoId:: (Key Todo))
+      if isJust maybeTodo
+        then runDb pool $ delete (toSqlKey todoId:: (Key Todo))
+        else throwError err404
 
     checkTodoDeadline :: Handler [Todo]
     checkTodoDeadline = do

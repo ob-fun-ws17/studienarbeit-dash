@@ -3,17 +3,6 @@
 
 module TodoSpec (spec) where
 
--- import           Control.Exception          (ErrorCall (..), throwIO)
--- import           Control.Monad.Catch
--- import           Control.Monad.Trans.Except
---
--- import           Network.HTTP.Client
--- import           Network.Wai.Handler.Warp
---
--- import           Servant.API
--- import           Servant.Client
-
-
 import           Data.ByteString.Lazy.Char8
 import           Data.String
 import           Data.Time
@@ -29,32 +18,35 @@ import           Todo                       (checkTodoDeadline', getToday)
 
 spec :: Spec
 spec = do
-
-
-  with (withApp) $ do
-
+  with withApp $
     describe "/todo" $ do
-        it "GET todo" $
-            get "/todo" `shouldRespondWith` "[]"
-        it "ADD category" $ do
-          post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
-        it "return only over deadline" $ do
-          post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
-          today <- liftIO getToday
-          yesterday <- liftIO $ fmap (addDays (-1)) getToday
-          request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay yesterday))
-            `shouldRespondWith` "1"
-          request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay today))
-            `shouldRespondWith` "2"
-          get "/todo/check" `shouldRespondWith` fromString ("[{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
-            ++ showGregorian yesterday ++ "\",\"todoDuration\":1}]")
-
-  describe "checkTodoDeadline" $ do
+      it "ADD category" addTestCategory
+      it "ADD and REMOVE Todo" $ do
+        addTestCategory
+        request methodGet "/todo/add" jsonHeader "{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\"2017-11-17\",\"todoDuration\":1}"
+          `shouldRespondWith` "1"
+        get "/todo/1" `shouldRespondWith`
+          "{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\"2017-11-17\",\"todoDuration\":1}"
+        get "/todo/remove/1" `shouldRespondWith` 200
+      it "GET todo" $
+          get "/todo" `shouldRespondWith` "[]"
+      it "return only over deadline" $ do
+        addTestCategory
+        today <- liftIO getToday
+        yesterday <- liftIO $ fmap (addDays (-1)) getToday
+        request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay yesterday))
+          `shouldRespondWith` "1"
+        request methodGet "/todo/add" jsonHeader (pack (testTodoOfDay today))
+          `shouldRespondWith` "2"
+        get "/todo/check" `shouldRespondWith` fromString ("[{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
+          ++ showGregorian yesterday ++ "\",\"todoDuration\":1}]")
+  describe "checkTodoDeadline" $
     it "no Todos" $ do
       today <- liftIO getToday
       checkTodoDeadline' [] today `shouldBe` []
 
-
+addTestCategory :: WaiExpectation
+addTestCategory = post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
 
 testTodoOfDay :: Day -> String
 testTodoOfDay day = "{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""
