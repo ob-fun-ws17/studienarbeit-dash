@@ -15,9 +15,7 @@ import           Test.Mockery.Directory
 
 spec :: Spec
 spec = do
-
   with withApp $
-
     describe "/task" $ do
         it "add with dependencies ok" $ do
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
@@ -28,11 +26,9 @@ spec = do
             `shouldRespondWith` "[{\"dependencyParent\":1,\"dependencyChild\":3},{\"dependencyParent\":2,\"dependencyChild\":3}]"
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,3]}")
             `shouldRespondWith` "[{\"dependencyParent\":1,\"dependencyChild\":4},{\"dependencyParent\":3,\"dependencyChild\":4}]"
-
         it "add with dependencies not ok" $
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1]}")
             `shouldRespondWith` "unsatisfiedDeps: [1]" {matchStatus = 406}
-
   describe "concatDep" $ do
     it "on empty" $
       concatDep [1,2] []  `shouldBe` [(1, []), (2, [])]
@@ -43,9 +39,9 @@ spec = do
       sortDep [(1,[]),(2,[])] `shouldBe` [1,2]
     it "with dependencies" $
       sortDep [(1,[]), (2,[1]), (3,[1,2]), (4,[1,3])] `shouldBe` [1,2,3,4]
-
-
-
+  describe "combination of concat and sort" $
+    it "" $
+      sortDep (concatDep [1,2,3] [(2,1),(3,1),(3,2)]) `shouldBe` [1,2,3]
 
 jsonHeader :: RequestHeaders
 jsonHeader = [(hContentType , "application/json")]
