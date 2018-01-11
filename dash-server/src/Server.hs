@@ -8,32 +8,40 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
+{-|
+Module      : Server
+Description : Server based on Servant
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module controls the logging, initializes the database
+and starts the Servant server.
+-}
 module Server
-  ( startApp
+  ( app
   , initApp
-  , app
   ) where
 
-import           Control.Monad.Logger     (runStderrLoggingT)
-
+import           Control.Monad.Logger    (runStderrLoggingT)
 import           Data.String.Conversions
+
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite
 
 import           Network.Wai
-import           Network.Wai.Handler.Warp
-
-import           Servant
 
 import           Entity
+import           Servant
 import           Task
 import           Todo
 
-startApp :: FilePath -> Int -> IO ()
-startApp file port =
-  run port =<< initApp file
 
-initApp :: FilePath -> IO Application
+-- | Initializes the Application with logging to StdErr and migrates the
+-- database
+initApp :: FilePath -- ^ the path for the database file
+        -> IO Application
 initApp file = do
   pool <- runStderrLoggingT $
     createSqlitePool (cs file) 5
@@ -93,5 +101,7 @@ server pool =
 api :: Proxy API
 api = Proxy
 
-app :: ConnectionPool -> Application
+-- | The executable Application
+app :: ConnectionPool -- ^ the pool of database connections to be used
+    -> Application -- ^ the application
 app pool = serve api $ server pool

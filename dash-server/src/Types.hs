@@ -7,6 +7,19 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+{-|
+Module      : Types
+Description : Custom database types and JSON for the API
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains the custom database types which for some reason can't
+be in the same file as the database entities.
+Also there are the types to derive ToJSON and FromJSON which are only used
+for the API and not as database entities.
+-}
 module Types where
 
 import           Data.Aeson.TH
@@ -14,17 +27,30 @@ import           Data.Aeson.TH
 import           Database.Persist.TH
 import           GHC.Generics
 
-data Status = Open | InProgress | Closed
- deriving (Show, Read, Eq, Ord, Generic)
+-- | Status of a Todo
+data Status = Open -- ^ not yet started
+            | InProgress -- ^ started but not finished
+            | Closed -- ^ finished
+  deriving (Show, Read, Eq, Ord, Generic)
 derivePersistField "Status"
+-- ^ PersistFieldSql instances for Status
+deriveJSON defaultOptions ''Status
+-- ^ FromJSON and ToJSON instances for Status
 
-data Priority = Low | Middle | High
+-- | Priority of a Todo
+data Priority = Low -- ^ Low Priority
+              | Middle -- ^ Medium Priority
+              | High -- ^ High Priority
   deriving (Show, Read, Eq, Ord, Generic)
 derivePersistField "Priority"
+-- ^ PersistFieldSql instances for Priority
+deriveJSON defaultOptions ''Priority
+-- ^ FromJSON and ToJSON instances for Priority
 
+-- | A Task element to be used as JSON for the TaskAPI
 data Task = Task
-  { name         :: String
-  , dependencies :: [Int]
+  { name         :: String -- ^ the name of the task
+  , dependencies :: [Int] --dependencies of the task
   } deriving (Show, Read, Eq, Ord, Generic)
-
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Task, ''Priority, ''Status]
+deriveJSON defaultOptions ''Task
+-- ^ FromJSON and ToJSON instances for Task

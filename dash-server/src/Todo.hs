@@ -2,6 +2,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
 
+{-|
+Module      : Todo
+Description : Everything for TodoAPI
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+
+This module contains the TodoAPI and its implementation.
+-}
 module Todo
   ( TodoAPI
   , todoServer
@@ -16,6 +27,8 @@ import           Servant
 
 import           Entity
 
+-- |  The Rest API hadling todos.
+-- All its services' uri- paths start with "/todo/"
 type TodoAPI = "todo" :>
   (     Get '[JSON] [Todo]
   :<|> "add" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
@@ -23,7 +36,9 @@ type TodoAPI = "todo" :>
   :<|> "check" :> Get '[JSON] [Todo]
   )
 
-todoServer :: ConnectionPool -> Server TodoAPI
+-- | Implementation of the TodoAPI
+todoServer :: ConnectionPool -- ^ the pool of database connections to be used
+           -> Server TodoAPI -- ^ the server for the TodoAPI
 todoServer pool = getAllTodos
              :<|> addTodo
              :<|> getTodo
@@ -48,11 +63,17 @@ todoServer pool = getAllTodos
       today <- liftIO getToday
       return $ checkTodoDeadline' todoList today
 
-checkTodoDeadline' :: [Todo] -> Day -> [Todo]
-checkTodoDeadline' allTodos today =
-  filter (\x -> today > todoDeadline x) allTodos
+-- | Checks for all given Todos whether or not there is enought time left
+-- for them to be compleated
+-- TODO: use duration
+checkTodoDeadline' :: [Todo] -- ^ List of Todos to check
+                   -> Day -- ^ the day on wich the todos should be finished
+                   -> [Todo] -- ^ list of todos with not enought time left
+checkTodoDeadline' allTodos day =
+  filter (\x -> day > todoDeadline x) allTodos
 
-getToday :: IO Day
+-- | Returns today as an IO Monad of Day
+getToday :: IO Day -- ^ the Monad of today
 getToday =  fmap utctDay getCurrentTime
 
 loadAllTodos :: ConnectionPool -> Handler [Todo]

@@ -2,20 +2,29 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
-
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+{-# OPTIONS_HADDOCK prune #-}
 
+{-|
+Module      : Entity
+Description : Persist entities
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains all the entities for the database.
+The corresponding types are generated using TemplateHaskell and QuasiQuotes.
+-}
 module Entity where
 
 import           Control.Monad.IO.Class
 import           Data.Aeson.TH
-import           Data.Text              as Text
 import           Data.Time
 import           Database.Persist.Sql
 import           Database.Persist.TH
@@ -40,7 +49,7 @@ Dependency
   child DbTaskId
   UniqueD parent child
 Todo
-  context Text
+  context String
   status Status
   category CategoryId
   priority Priority
@@ -49,7 +58,19 @@ Todo
   deriving Eq Read Show Generic
 |]
 
-Prelude.concat <$> mapM (deriveJSON defaultOptions) [''Test, ''Dependency, ''DbTask, ''Todo, ''Category]
+deriveJSON defaultOptions ''Test
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''Dependency
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''DbTask
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''Todo
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''Category
+-- ^ FromJSON and ToJSON instances
 
-runDb :: ConnectionPool -> SqlPersistT IO b -> Handler b
+-- | runs a database query
+runDb :: ConnectionPool -- ^ the pool of database connections to use
+      -> SqlPersistT IO b -- ^ the  database action to be executed
+      -> Handler b -- ^ the Handler Monade for the corresponding Entity
 runDb pool query = liftIO $ runSqlPool query pool

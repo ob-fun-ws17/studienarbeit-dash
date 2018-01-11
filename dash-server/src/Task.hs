@@ -3,6 +3,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
 
+{-|
+Module      : Task
+Description : Everything for TaskAPI
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains the TaskAPI and its implementation.
+-}
 module Task
   ( TaskAPI
   , taskServer
@@ -17,12 +27,16 @@ import           Entity
 import           Servant
 import           Types
 
+-- |  The Rest API hadling tasks.
+-- All its services' uri- paths start with "/task/"
 type TaskAPI = "task" :>
   (    "add" :> ReqBody '[JSON] Task :> Get '[JSON] [Dependency]
   :<|> "sort" :> Get '[JSON] [Int]
   )
 
-taskServer :: ConnectionPool -> Server TaskAPI
+-- | Implementation of the TaskAPI
+taskServer :: ConnectionPool -- ^ the pool of database connections to be used
+           -> Server TaskAPI -- ^ the server for the TaskAPI
 taskServer pool = addTask
              :<|> sort
   where
@@ -53,17 +67,22 @@ loadDep pool =
     depAsTuple :: Dependency -> (Int, Int)
     depAsTuple x = (fromIntegral $ fromSqlKey $ dependencyChild x, fromIntegral $ fromSqlKey $ dependencyParent x)
 
-concatDep :: [Int] -> [(Int, Int)] -> [(Int, [Int])]
+-- | Computes a list of dependencies
+concatDep :: [Int] -- ^ list of tasks
+          -> [(Int, Int)] -- ^ pairs of dependencies [(x, y) reads: x depends on y]
+          -> [(Int, [Int])] -- ^ computed list [(x, ys) reads: x has ys dependencies]
 concatDep t d =
   map (\x -> (x, map snd $ filter ((==) x . fst) d )) t
 
-sortDep :: [(Int, [Int])] -> [Int]
+-- | Sorts dependencies
+sortDep :: [(Int, [Int])] -- ^ list of tasks with coresponding dependencies
+        -> [Int] -- ^ list of dependencies where n has to be used before n+1
 sortDep [] = []
-sortDep xs = withoutChild <> sortDep (map removeAlreadyListed withParent)
+sortDep xs = withoutParent <> sortDep (map removeAlreadyListed withParent)
   where
-    withoutChild :: [Int]
-    withoutChild = map fst $ filter (null . snd) xs
+    withoutParent :: [Int]
+    withoutParent = map fst $ filter (null . snd) xs
     withParent :: [(Int,[Int])]
-    withParent = filter (\(x,_) -> x `notElem` withoutChild) xs
+    withParent = filter (\(x,_) -> x `notElem` withoutParent) xs
     removeAlreadyListed :: (Int, [Int]) -> (Int, [Int])
-    removeAlreadyListed (x, ys)= (x, filter (`elem` withoutChild) ys)
+    removeAlreadyListed (x, ys)= (x, filter (`elem` withoutParent) ys)
