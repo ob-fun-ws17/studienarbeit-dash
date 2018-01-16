@@ -47,14 +47,6 @@ derivePersistField "Priority"
 deriveJSON defaultOptions ''Priority
 -- ^ FromJSON and ToJSON instances for Priority
 
--- | A Task element to be used as JSON for the TaskAPI
-data Task = Task
-  { name         :: String -- ^ the name of the task
-  , dependencies :: [Int] --dependencies of the task
-  } deriving (Show, Read, Eq, Ord, Generic)
-deriveJSON defaultOptions ''Task
--- ^ FromJSON and ToJSON instances for Task
-
 -- | A Dependency element to be used as JSON for the TaskAPI
 data Dependency = Dependency
   { depends :: Int -- ^ the key of the task to depend on
@@ -63,3 +55,11 @@ data Dependency = Dependency
   } deriving (Show, Read, Eq, Ord, Generic)
 deriveJSON defaultOptions ''Dependency
 -- ^ FromJSON and ToJSON instances for Dependency
+
+-- | A Task element to be used as JSON for the TaskAPI
+data Task = Task
+  { name         :: String -- ^ the name of the task
+  , dependencies :: [Dependency] --dependencies of the task
+  } deriving (Show, Read, Eq, Ord, Generic)
+deriveJSON defaultOptions ''Task
+-- ^ FromJSON and ToJSON instances for Task

@@ -42,7 +42,7 @@ taskServer pool = addTask
   where
     addTask :: Task -> Handler [DbDependency]
     addTask newTask = do
-      let dependencyList = map fromIntegral $ dependencies newTask
+      let dependencyList = map (fromIntegral . depends) $ dependencies newTask
       allTaskKeys <- runDb pool $ selectKeysList ([] :: [Filter DbTask]) []
       let unsatisfiedDeps = filter (`notElem` map fromSqlKey allTaskKeys) dependencyList
       if not $ null unsatisfiedDeps

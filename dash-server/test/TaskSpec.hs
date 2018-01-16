@@ -22,12 +22,12 @@ spec = do
             `shouldRespondWith` 200
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
             `shouldRespondWith` 200
-          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,2]}")
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0},{\"depends\":2,\"major\":1,\"minor\":0}]}")
             `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":3},{\"dbDependencyParent\":2,\"dbDependencyChild\":3}]"
-          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,3]}")
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0},{\"depends\":3,\"major\":1,\"minor\":0}]}")
             `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":4},{\"dbDependencyParent\":3,\"dbDependencyChild\":4}]"
         it "add with dependencies not ok" $
-          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1]}")
+          request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0}]}")
             `shouldRespondWith` "unsatisfiedDeps: [1]" {matchStatus = 406}
   describe "concatDep" $ do
     it "on empty" $
