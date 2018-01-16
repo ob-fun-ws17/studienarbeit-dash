@@ -23,9 +23,9 @@ spec = do
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
             `shouldRespondWith` 200
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0},{\"depends\":2,\"major\":1,\"minor\":0}]}")
-            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":3},{\"dbDependencyParent\":2,\"dbDependencyChild\":3}]"
+            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":3,\"dbDependencyMajor\":1,\"dbDependencyMinor\":0},{\"dbDependencyParent\":2,\"dbDependencyChild\":3,\"dbDependencyMajor\":1,\"dbDependencyMinor\":0}]"
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0},{\"depends\":3,\"major\":1,\"minor\":0}]}")
-            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":4},{\"dbDependencyParent\":3,\"dbDependencyChild\":4}]"
+            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":4,\"dbDependencyMajor\":1,\"dbDependencyMinor\":0},{\"dbDependencyParent\":3,\"dbDependencyChild\":4,\"dbDependencyMajor\":1,\"dbDependencyMinor\":0}]"
         it "add with dependencies not ok" $
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[{\"depends\":1,\"major\":1,\"minor\":0}]}")
             `shouldRespondWith` "unsatisfiedDeps: [1]" {matchStatus = 406}

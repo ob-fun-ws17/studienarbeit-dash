@@ -47,6 +47,8 @@ DbTask
 DbDependency
   parent DbTaskId
   child DbTaskId
+  major Int
+  minor Int
   UniqueD parent child
 Todo
   context String

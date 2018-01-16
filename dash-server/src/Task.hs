@@ -42,15 +42,17 @@ taskServer pool = addTask
   where
     addTask :: Task -> Handler [DbDependency]
     addTask newTask = do
-      let dependencyList = map (fromIntegral . depends) $ dependencies newTask
+      let dependencyList = dependencies newTask
+      let dependencyKeys = map (fromIntegral . depends) dependencyList
       allTaskKeys <- runDb pool $ selectKeysList ([] :: [Filter DbTask]) []
-      let unsatisfiedDeps = filter (`notElem` map fromSqlKey allTaskKeys) dependencyList
+      let unsatisfiedDeps = filter (`notElem` map fromSqlKey allTaskKeys) dependencyKeys
       if not $ null unsatisfiedDeps
         then throwError err406 { errBody = fromString ("unsatisfiedDeps: " ++ show unsatisfiedDeps)}
         else do
           let dbTask = DbTask (name newTask)
           taskKey <- runDb pool $ insert dbTask
-          runDb pool $ insertMany_ $ map (\x -> DbDependency (toSqlKey x) taskKey) dependencyList
+          runDb pool $ insertMany_ $
+            map (\x -> DbDependency (toSqlKey $ fromIntegral $ depends x) taskKey (major x) (minor x)) dependencyList
           fmap (map entityVal) $ runDb pool $ selectList [DbDependencyChild ==. taskKey] []
 
     sort :: Handler [Int]
