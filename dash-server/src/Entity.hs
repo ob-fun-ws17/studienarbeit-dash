@@ -44,7 +44,7 @@ Category
 DbTask
   name String
   deriving Eq Read Show Generic
-Dependency
+DbDependency
   parent DbTaskId
   child DbTaskId
   UniqueD parent child
@@ -60,7 +60,7 @@ Todo
 
 deriveJSON defaultOptions ''Test
 -- ^ FromJSON and ToJSON instances
-deriveJSON defaultOptions ''Dependency
+deriveJSON defaultOptions ''DbDependency
 -- ^ FromJSON and ToJSON instances
 deriveJSON defaultOptions ''DbTask
 -- ^ FromJSON and ToJSON instances

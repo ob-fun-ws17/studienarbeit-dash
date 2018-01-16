@@ -23,9 +23,9 @@ spec = do
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[]}")
             `shouldRespondWith` 200
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,2]}")
-            `shouldRespondWith` "[{\"dependencyParent\":1,\"dependencyChild\":3},{\"dependencyParent\":2,\"dependencyChild\":3}]"
+            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":3},{\"dbDependencyParent\":2,\"dbDependencyChild\":3}]"
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1,3]}")
-            `shouldRespondWith` "[{\"dependencyParent\":1,\"dependencyChild\":4},{\"dependencyParent\":3,\"dependencyChild\":4}]"
+            `shouldRespondWith` "[{\"dbDependencyParent\":1,\"dbDependencyChild\":4},{\"dbDependencyParent\":3,\"dbDependencyChild\":4}]"
         it "add with dependencies not ok" $
           request methodGet "/task/add" jsonHeader (pack "{\"name\":\"a\",\"dependencies\":[1]}")
             `shouldRespondWith` "unsatisfiedDeps: [1]" {matchStatus = 406}

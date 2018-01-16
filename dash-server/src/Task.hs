@@ -30,7 +30,7 @@ import           Types
 -- |  The Rest API hadling tasks.
 -- All its services' uri- paths start with "/task/"
 type TaskAPI = "task" :>
-  (    "add" :> ReqBody '[JSON] Task :> Get '[JSON] [Dependency]
+  (    "add" :> ReqBody '[JSON] Task :> Get '[JSON] [DbDependency]
   :<|> "sort" :> Get '[JSON] [Int]
   )
 
@@ -40,7 +40,7 @@ taskServer :: ConnectionPool -- ^ the pool of database connections to be used
 taskServer pool = addTask
              :<|> sort
   where
-    addTask :: Task -> Handler [Dependency]
+    addTask :: Task -> Handler [DbDependency]
     addTask newTask = do
       let dependencyList = map fromIntegral $ dependencies newTask
       allTaskKeys <- runDb pool $ selectKeysList ([] :: [Filter DbTask]) []
@@ -50,8 +50,8 @@ taskServer pool = addTask
         else do
           let dbTask = DbTask (name newTask)
           taskKey <- runDb pool $ insert dbTask
-          runDb pool $ insertMany_ $ map (\x -> Dependency (toSqlKey x) taskKey) dependencyList
-          fmap (map entityVal) $ runDb pool $ selectList [DependencyChild ==. taskKey] []
+          runDb pool $ insertMany_ $ map (\x -> DbDependency (toSqlKey x) taskKey) dependencyList
+          fmap (map entityVal) $ runDb pool $ selectList [DbDependencyChild ==. taskKey] []
 
     sort :: Handler [Int]
     sort = do
@@ -62,10 +62,10 @@ taskServer pool = addTask
 
 loadDep :: ConnectionPool -> Handler [(Int,Int)]
 loadDep pool =
-  fmap ( map (depAsTuple . entityVal)) $ runDb pool $ selectList ([] :: [Filter Dependency]) []
+  fmap ( map (depAsTuple . entityVal)) $ runDb pool $ selectList ([] :: [Filter DbDependency]) []
   where
-    depAsTuple :: Dependency -> (Int, Int)
-    depAsTuple x = (fromIntegral $ fromSqlKey $ dependencyChild x, fromIntegral $ fromSqlKey $ dependencyParent x)
+    depAsTuple :: DbDependency -> (Int, Int)
+    depAsTuple x = (fromIntegral $ fromSqlKey $ dbDependencyChild x, fromIntegral $ fromSqlKey $ dbDependencyParent x)
 
 -- | Computes a list of dependencies
 concatDep :: [Int] -- ^ list of tasks
