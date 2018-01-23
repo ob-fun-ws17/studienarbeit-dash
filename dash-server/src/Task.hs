@@ -20,7 +20,7 @@ module Task
   , sortDep
   ) where
 
-import           Data.Monoid
+import           Control.Arrow
 import           Data.String
 import           Database.Persist.Sql
 import           Entity
@@ -30,9 +30,9 @@ import           Types
 -- |  The Rest API hadling tasks.
 -- All its services' uri- paths start with "/task/"
 type TaskAPI = "task" :>
-  (    "add" :> ReqBody '[JSON] Task :> Get '[JSON] [DbDependency]
+     ( "add" :> ReqBody '[JSON] Task :> Get '[JSON] [DbDependency]
   :<|> "sort" :> Get '[JSON] [Int]
-  )
+     )
 
 -- | Implementation of the TaskAPI
 taskServer :: ConnectionPool -- ^ the pool of database connections to be used
@@ -57,13 +57,12 @@ taskServer pool = addTask
 
     sort :: Handler [Int]
     sort = do
-      depTuple <- loadDep pool
+      depTuple <- loadAllDep pool
       taskEntityList <- runDb pool $ selectList ([] :: [Filter DbTask]) []
       return $ sortDep $ concatDep (map (fromIntegral . fromSqlKey . entityKey) taskEntityList) depTuple
 
-
-loadDep :: ConnectionPool -> Handler [(Int,Int)]
-loadDep pool =
+loadAllDep :: ConnectionPool -> Handler [(Int,Int)]
+loadAllDep pool =
   fmap ( map (depAsTuple . entityVal)) $ runDb pool $ selectList ([] :: [Filter DbDependency]) []
   where
     depAsTuple :: DbDependency -> (Int, Int)
@@ -80,11 +79,10 @@ concatDep t d =
 sortDep :: [(Int, [Int])] -- ^ list of tasks with coresponding dependencies
         -> [Int] -- ^ list of dependencies where n has to be used before n+1
 sortDep [] = []
-sortDep xs = withoutParent <> sortDep (map removeAlreadyListed withParent)
+sortDep xs =
+  let sorted = map fst $ filter (\(_,y) -> null y) xs
+      removed = removeDep sorted $ filter (\(_,y) -> not $ null y) xs
+  in sorted ++ sortDep removed
   where
-    withoutParent :: [Int]
-    withoutParent = map fst $ filter (null . snd) xs
-    withParent :: [(Int,[Int])]
-    withParent = filter (\(x,_) -> x `notElem` withoutParent) xs
-    removeAlreadyListed :: (Int, [Int]) -> (Int, [Int])
-    removeAlreadyListed (x, ys)= (x, filter (`elem` withoutParent) ys)
+    removeDep :: [Int] -> [(Int,[Int])] -> [(Int,[Int])]
+    removeDep alreadyContained = map (second (filter (`notElem` alreadyContained)))

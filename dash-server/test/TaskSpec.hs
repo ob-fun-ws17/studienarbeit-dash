@@ -37,11 +37,15 @@ spec = do
   describe "sortDep" $ do
     it "empty dependencies" $
       sortDep [(1,[]),(2,[])] `shouldBe` [1,2]
-    it "with dependencies" $
+    it "with dependencies in order" $
       sortDep [(1,[]), (2,[1]), (3,[1,2]), (4,[1,3])] `shouldBe` [1,2,3,4]
-  describe "combination of concat and sort" $
-    it "" $
+    it "with dependencies out of order" $
+      sortDep [(1,[]), (2,[1]), (4,[1,3]), (3,[1,2])] `shouldBe` [1,2,3,4]
+  describe "combination of concat and sort" $ do
+    it "already ordered" $
       sortDep (concatDep [1,2,3] [(2,1),(3,1),(3,2)]) `shouldBe` [1,2,3]
+    it "out of order" $
+      sortDep (concatDep [3,2,1] [(2,1),(3,1),(3,2)]) `shouldBe` [1,2,3]
 
 jsonHeader :: RequestHeaders
 jsonHeader = [(hContentType , "application/json")]
