@@ -21,12 +21,6 @@ install:
 
 script:
 - stack --no-terminal test --haddock --no-haddock-deps
-- export HADDOCK_ROOT="$(stack path --dist-dir)"
-
-deploy:
-  provider: pages
-  skip_cleanup: true
-  
 - export HaddockDir="$(stack path --dist-dir)"
 
 deploy:
