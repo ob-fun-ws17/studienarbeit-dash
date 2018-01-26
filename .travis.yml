@@ -21,9 +21,17 @@ install:
 
 script:
 - stack --no-terminal test --haddock --no-haddock-deps
+- export HADDOCK_ROOT="$(stack path --dist-dir)"
 
 deploy:
   provider: pages
+  skip_cleanup: true
+  
+- export HaddockDir="$(stack path --dist-dir)"
+
+deploy:
+  provider: pages
+  local_dir: $HaddockDir/doc/html/Hangkell
   skip-cleanup: true
   github-token: $TravisToken  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
