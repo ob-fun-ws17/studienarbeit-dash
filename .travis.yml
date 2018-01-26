@@ -21,3 +21,11 @@ install:
 
 script:
 - stack --no-terminal test --haddock --no-haddock-deps
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $TravisToken  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  on:
+    branch: master
