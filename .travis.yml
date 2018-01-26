@@ -25,7 +25,7 @@ script:
 
 deploy:
   provider: pages
-  local_dir: $HaddockDir/doc/html/Hangkell
+  local_dir: $HaddockDir/doc/html/dash-server
   skip-cleanup: true
   github-token: $TravisToken  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
