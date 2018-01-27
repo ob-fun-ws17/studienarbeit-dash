@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds           #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings   #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE TypeOperators       #-}</span><span>
+</span><a name="line-5"></a><span>
+</span><a name="line-6"></a><span class="hs-comment">{-|
+Module      : Task
+Description : Everything for TaskAPI
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains the TaskAPI and its implementation.
+-}</span><span>
+</span><a name="line-16"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Task</span><span>
+</span><a name="line-17"></a><span>  </span><span class="hs-special">(</span><span> </span><a href="Task.html#TaskAPI"><span class="hs-identifier hs-type">TaskAPI</span></a><span>
+</span><a name="line-18"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Task.html#taskServer"><span class="hs-identifier hs-var">taskServer</span></a><span>
+</span><a name="line-19"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Task.html#concatDep"><span class="hs-identifier hs-var">concatDep</span></a><span>
+</span><a name="line-20"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Task.html#sortDep"><span class="hs-identifier hs-var">sortDep</span></a><span>
+</span><a name="line-21"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-22"></a><span>
+</span><a name="line-23"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Monoid</span><span>
+</span><a name="line-24"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">String</span><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">Sql</span><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span>           </span><a href="Entity.html"><span class="hs-identifier">Entity</span></a><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Servant</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><a href="Types.html"><span class="hs-identifier">Types</span></a><span>
+</span><a name="line-29"></a><span>
+</span><a name="line-30"></a><span class="hs-comment">-- |  The Rest API hadling tasks.</span><span>
+</span><a name="line-31"></a><span class="hs-comment">-- All its services' uri- paths start with &quot;/task/&quot;</span><span>
+</span><a name="line-32"></a><span class="hs-keyword">type</span><span> </span><a name="TaskAPI"><a href="Task.html#TaskAPI"><span class="hs-identifier">TaskAPI</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;task&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span>
+</span><a name="line-33"></a><span>  </span><span class="hs-special">(</span><span>    </span><span class="hs-string">&quot;add&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span> </span><span class="hs-identifier hs-type">ReqBody</span><span> </span><span class="hs-char">'[JSON] Task :&gt; Get '[JSON] [DbDependency]
+  :&lt;|&gt; &quot;sort&quot; :&gt; Get '[JSON] [Int]
+  )
+
+-- | Implementation of the TaskAPI
+taskServer :: ConnectionPool -- ^ the pool of database connections to be used
+           -&gt; Server TaskAPI -- ^ the server for the TaskAPI
+taskServer pool = addTask
+             :&lt;|&gt; sort
+  where
+    addTask :: Task -&gt; Handler [DbDependency]
+    addTask newTask = do
+      let dependencyList = dependencies newTask
+      let dependencyKeys = map (fromIntegral . depends) dependencyList
+      allTaskKeys &lt;- runDb pool $ selectKeysList ([] :: [Filter DbTask]) []
+      let unsatisfiedDeps = filter (`notElem` map fromSqlKey allTaskKeys) dependencyKeys
+      if not $ null unsatisfiedDeps
+        then throwError err406 { errBody = fromString (&quot;unsatisfiedDeps: &quot; ++ show unsatisfiedDeps)}
+        else do
+          let dbTask = DbTask (name newTask)
+          taskKey &lt;- runDb pool $ insert dbTask
+          runDb pool $ insertMany_ $
+            map (\x -&gt; DbDependency (toSqlKey $ fromIntegral $ depends x) taskKey (major x) (minor x)) dependencyList
+          fmap (map entityVal) $ runDb pool $ selectList [DbDependencyChild ==. taskKey] []
+
+    sort :: Handler [Int]
+    sort = do
+      depTuple &lt;- loadDep pool
+      taskEntityList &lt;- runDb pool $ selectList ([] :: [Filter DbTask]) []
+      return $ sortDep $ concatDep (map (fromIntegral . fromSqlKey . entityKey) taskEntityList) depTuple
+
+
+loadDep :: ConnectionPool -&gt; Handler [(Int,Int)]
+loadDep pool =
+  fmap ( map (depAsTuple . entityVal)) $ runDb pool $ selectList ([] :: [Filter DbDependency]) []
+  where
+    depAsTuple :: DbDependency -&gt; (Int, Int)
+    depAsTuple x = (fromIntegral $ fromSqlKey $ dbDependencyChild x, fromIntegral $ fromSqlKey $ dbDependencyParent x)
+
+-- | Computes a list of dependencies
+concatDep :: [Int] -- ^ list of tasks
+          -&gt; [(Int, Int)] -- ^ pairs of dependencies [(x, y) reads: x depends on y]
+          -&gt; [(Int, [Int])] -- ^ computed list [(x, ys) reads: x has ys dependencies]
+concatDep t d =
+  map (\x -&gt; (x, map snd $ filter ((==) x . fst) d )) t
+
+-- | Sorts dependencies
+sortDep :: [(Int, [Int])] -- ^ list of tasks with coresponding dependencies
+        -&gt; [Int] -- ^ list of dependencies where n has to be used before n+1
+sortDep [] = []
+sortDep xs = withoutParent &lt;&gt; sortDep (map removeAlreadyListed withParent)
+  where
+    withoutParent :: [Int]
+    withoutParent = map fst $ filter (null . snd) xs
+    withParent :: [(Int,[Int])]
+    withParent = filter (\(x,_) -&gt; x `notElem` withoutParent) xs
+    removeAlreadyListed :: (Int, [Int]) -&gt; (Int, [Int])
+    removeAlreadyListed (x, ys)= (x, filter (`elem` withoutParent) ys)
+</span></pre></body></html>

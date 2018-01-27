@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE DeriveGeneric              #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE GADTs                      #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><a name="line-5"></a><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses      #-}</span><span>
+</span><a name="line-6"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings          #-}</span><span>
+</span><a name="line-7"></a><span class="hs-pragma">{-# LANGUAGE QuasiQuotes                #-}</span><span>
+</span><a name="line-8"></a><span class="hs-pragma">{-# LANGUAGE TemplateHaskell            #-}</span><span>
+</span><a name="line-9"></a><span class="hs-pragma">{-# LANGUAGE TypeFamilies               #-}</span><span>
+</span><a name="line-10"></a><span>
+</span><a name="line-11"></a><span class="hs-pragma">{-# OPTIONS_HADDOCK prune #-}</span><span>
+</span><a name="line-12"></a><span>
+</span><a name="line-13"></a><span class="hs-comment">{-|
+Module      : Entity
+Description : Persist entities
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains all the entities for the database.
+The corresponding types are generated using TemplateHaskell and QuasiQuotes.
+-}</span><span>
+</span><a name="line-24"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Entity</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-25"></a><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">IO</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Aeson</span><span class="hs-operator">.</span><span class="hs-identifier">TH</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Time</span><span>
+</span><a name="line-29"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">Sql</span><span>
+</span><a name="line-30"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">TH</span><span>
+</span><a name="line-31"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">GHC</span><span class="hs-operator">.</span><span class="hs-identifier">Generics</span><span>
+</span><a name="line-32"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Servant</span><span>
+</span><a name="line-33"></a><span>
+</span><a name="line-34"></a><span class="hs-keyword">import</span><span>           </span><a href="Types.html"><span class="hs-identifier">Types</span></a><span>
+</span><a name="line-35"></a><span>
+</span><a name="line-36"></a><span class="hs-identifier hs-var">share</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-var">mkPersist</span><span> </span><span class="hs-identifier hs-var">sqlSettings</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">mkMigrate</span><span> </span><span class="hs-string">&quot;migrateAll&quot;</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-var">persistLowerCase</span><span class="hs-glyph">|</span><span>
+</span><a name="line-37"></a><span class="hs-identifier hs-var">Test</span><span>
+</span><a name="line-38"></a><span>  </span><span class="hs-identifier hs-var">testString</span><span> </span><span class="hs-identifier hs-var">String</span><span>
+</span><a name="line-39"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-identifier hs-var">Eq</span><span> </span><span class="hs-identifier hs-var">Read</span><span> </span><span class="hs-identifier hs-var">Show</span><span> </span><span class="hs-identifier hs-var">Generic</span><span>
+</span><a name="line-40"></a><span class="hs-identifier hs-var">Category</span><span>
+</span><a name="line-41"></a><span>  </span><span class="hs-identifier hs-var">category</span><span> </span><span class="hs-identifier hs-var">String</span><span>
+</span><a name="line-42"></a><span>  </span><span class="hs-identifier hs-var">Unique</span><span> </span><span class="hs-identifier hs-var">CategoryU</span><span> </span><span class="hs-identifier hs-var">category</span><span>
+</span><a name="line-43"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-identifier hs-var">Eq</span><span> </span><span class="hs-identifier hs-var">Read</span><span> </span><span class="hs-identifier hs-var">Show</span><span> </span><span class="hs-identifier hs-var">Generic</span><span>
+</span><a name="line-44"></a><span class="hs-identifier hs-var">DbTask</span><span>
+</span><a name="line-45"></a><span>  </span><span class="hs-identifier hs-var">name</span><span> </span><span class="hs-identifier hs-var">String</span><span>
+</span><a name="line-46"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-identifier hs-var">Eq</span><span> </span><span class="hs-identifier hs-var">Read</span><span> </span><span class="hs-identifier hs-var">Show</span><span> </span><span class="hs-identifier hs-var">Generic</span><span>
+</span><a name="line-47"></a><span class="hs-identifier hs-var">DbDependency</span><span>
+</span><a name="line-48"></a><span>  </span><span class="hs-identifier hs-var">parent</span><span> </span><span class="hs-identifier hs-var">DbTaskId</span><span>
+</span><a name="line-49"></a><span>  </span><span class="hs-identifier hs-var">child</span><span> </span><span class="hs-identifier hs-var">DbTaskId</span><span>
+</span><a name="line-50"></a><span>  </span><span class="hs-identifier hs-var">major</span><span> </span><span class="hs-identifier hs-var">Int</span><span>
+</span><a name="line-51"></a><span>  </span><span class="hs-identifier hs-var">minor</span><span> </span><span class="hs-identifier hs-var">Int</span><span>
+</span><a name="line-52"></a><span>  </span><span class="hs-identifier hs-var">UniqueD</span><span> </span><span class="hs-identifier hs-var">parent</span><span> </span><span class="hs-identifier hs-var">child</span><span>
+</span><a name="line-53"></a><span class="hs-identifier hs-var">Todo</span><span>
+</span><a name="line-54"></a><span>  </span><span class="hs-identifier hs-var">context</span><span> </span><span class="hs-identifier hs-var">String</span><span>
+</span><a name="line-55"></a><span>  </span><span class="hs-identifier hs-var">status</span><span> </span><span class="hs-identifier hs-var">Status</span><span>
+</span><a name="line-56"></a><span>  </span><span class="hs-identifier hs-var">category</span><span> </span><span class="hs-identifier hs-var">CategoryId</span><span>
+</span><a name="line-57"></a><span>  </span><span class="hs-identifier hs-var">priority</span><span> </span><span class="hs-identifier hs-var">Priority</span><span>
+</span><a name="line-58"></a><span>  </span><span class="hs-identifier hs-var">deadline</span><span> </span><span class="hs-identifier hs-var">Day</span><span>
+</span><a name="line-59"></a><span>  </span><span class="hs-identifier hs-var">duration</span><span> </span><span class="hs-identifier hs-var">Int</span><span>
+</span><a name="line-60"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-identifier hs-var">Eq</span><span> </span><span class="hs-identifier hs-var">Read</span><span> </span><span class="hs-identifier hs-var">Show</span><span> </span><span class="hs-identifier hs-var">Generic</span><span>
+</span><a name="line-61"></a><span class="hs-glyph">|</span><span class="hs-special">]</span><span>
+</span><a name="line-62"></a><span>
+</span><a name="line-63"></a><a href="#local-6989586621679252578"><span class="hs-identifier hs-var">deriveJSON</span></a><span> </span><a href="#local-6989586621679252578"><span class="hs-identifier hs-var">defaultOptions</span></a><span> </span><span class="hs-char">''Test
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''DbDependency
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''DbTask
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''Todo
+-- ^ FromJSON and ToJSON instances
+deriveJSON defaultOptions ''Category
+-- ^ FromJSON and ToJSON instances
+
+-- | runs a database query
+runDb :: ConnectionPool -- ^ the pool of database connections to use
+      -&gt; SqlPersistT IO b -- ^ the  database action to be executed
+      -&gt; Handler b -- ^ the Handler Monade for the corresponding Entity
+runDb pool query = liftIO $ runSqlPool query pool
+</span></pre></body></html>

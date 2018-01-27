@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds           #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE TypeOperators       #-}</span><span>
+</span><a name="line-4"></a><span>
+</span><a name="line-5"></a><span class="hs-comment">{-|
+Module      : Todo
+Description : Everything for TodoAPI
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+
+This module contains the TodoAPI and its implementation.
+-}</span><span>
+</span><a name="line-16"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Todo</span><span>
+</span><a name="line-17"></a><span>  </span><span class="hs-special">(</span><span> </span><a href="Todo.html#TodoAPI"><span class="hs-identifier hs-type">TodoAPI</span></a><span>
+</span><a name="line-18"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Todo.html#todoServer"><span class="hs-identifier hs-var">todoServer</span></a><span>
+</span><a name="line-19"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Todo.html#checkTodoDeadline%27"><span class="hs-identifier hs-var">checkTodoDeadline'</span></a><span>
+</span><a name="line-20"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Todo.html#getToday"><span class="hs-identifier hs-var">getToday</span></a><span>
+</span><a name="line-21"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-22"></a><span>
+</span><a name="line-23"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">IO</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-24"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Int</span><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Maybe</span><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Time</span><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">Sql</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Servant</span><span>
+</span><a name="line-29"></a><span>
+</span><a name="line-30"></a><span class="hs-keyword">import</span><span>           </span><a href="Entity.html"><span class="hs-identifier">Entity</span></a><span>
+</span><a name="line-31"></a><span>
+</span><a name="line-32"></a><span class="hs-comment">-- |  The Rest API hadling todos.</span><span>
+</span><a name="line-33"></a><span class="hs-comment">-- All its services' uri- paths start with &quot;/todo/&quot;</span><span>
+</span><a name="line-34"></a><span class="hs-keyword">type</span><span> </span><a name="TodoAPI"><a href="Todo.html#TodoAPI"><span class="hs-identifier">TodoAPI</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;todo&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span>
+</span><a name="line-35"></a><span>  </span><span class="hs-special">(</span><span>     </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-char">'[JSON] [Todo]
+  :&lt;|&gt; &quot;add&quot; :&gt; ReqBody '[JSON] Todo :&gt; Get '[JSON] (Key Todo)
+  :&lt;|&gt; Capture &quot;id&quot; Int64 :&gt;  Get '[JSON] Todo
+  :&lt;|&gt; &quot;remove&quot; :&gt; Capture &quot;id&quot; Int64 :&gt; Get '[JSON] ()
+  :&lt;|&gt; &quot;check&quot; :&gt; Get '[JSON] [Todo]
+  )
+
+-- | Implementation of the TodoAPI
+todoServer :: ConnectionPool -- ^ the pool of database connections to be used
+           -&gt; Server TodoAPI -- ^ the server for the TodoAPI
+todoServer pool = getAllTodos
+             :&lt;|&gt; addTodo
+             :&lt;|&gt; getTodo
+             :&lt;|&gt; removeTodo
+             :&lt;|&gt; checkTodoDeadline
+  where
+    getAllTodos :: Handler [Todo]
+    getAllTodos = loadAllTodos pool
+
+    addTodo :: Todo -&gt; Handler (Key Todo)
+    addTodo x = runDb pool $ insert x
+
+    getTodo :: Int64 -&gt; Handler Todo
+    getTodo todoId = do
+      maybeTodo &lt;- runDb pool $ get $ toSqlKey todoId
+      case maybeTodo of
+        Just a  -&gt; return a
+        Nothing -&gt; throwError err404
+
+    removeTodo :: Int64 -&gt; Handler ()
+    removeTodo todoId = do
+      maybeTodo &lt;- runDb pool $ get (toSqlKey todoId:: (Key Todo))
+      if isJust maybeTodo
+        then runDb pool $ delete (toSqlKey todoId:: (Key Todo))
+        else throwError err404
+
+    checkTodoDeadline :: Handler [Todo]
+    checkTodoDeadline = do
+      todoList &lt;- loadAllTodos pool
+      today &lt;- liftIO getToday
+      return $ checkTodoDeadline' todoList today
+
+-- | Checks for all given Todos whether or not there is enought time left
+-- for them to be compleated
+-- TODO: use duration
+checkTodoDeadline' :: [Todo] -- ^ List of Todos to check
+                   -&gt; Day -- ^ the day on wich the todos should be finished
+                   -&gt; [Todo] -- ^ list of todos with not enought time left
+checkTodoDeadline' allTodos day =
+  filter (\x -&gt; day &gt; todoDeadline x) allTodos
+
+-- | Returns today as an IO Monad of Day
+getToday :: IO Day -- ^ the Monad of today
+getToday =  fmap utctDay getCurrentTime
+
+loadAllTodos :: ConnectionPool -&gt; Handler [Todo]
+loadAllTodos pool =  do
+  allTodos &lt;- runDb pool $ selectList [] []
+  return $ fmap entityVal allTodos
+</span></pre></body></html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric              #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE EmptyDataDecls             #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE FlexibleContexts           #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><a name="line-5"></a><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses      #-}</span><span>
+</span><a name="line-6"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings          #-}</span><span>
+</span><a name="line-7"></a><span class="hs-pragma">{-# LANGUAGE TemplateHaskell            #-}</span><span>
+</span><a name="line-8"></a><span class="hs-pragma">{-# LANGUAGE TypeFamilies               #-}</span><span>
+</span><a name="line-9"></a><span>
+</span><a name="line-10"></a><span class="hs-comment">{-|
+Module      : Types
+Description : Custom database types and JSON for the API
+Copyright   : (c) Benedikt Friedrich, 2017
+License     : BSD-3
+Maintainer  : Benedikt Friedrich
+Stability   : experimental
+
+This module contains the custom database types which for some reason can't
+be in the same file as the database entities.
+Also there are the types to derive ToJSON and FromJSON which are only used
+for the API and not as database entities.
+-}</span><span>
+</span><a name="line-23"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Types</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-24"></a><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Aeson</span><span class="hs-operator">.</span><span class="hs-identifier">TH</span><span>
+</span><a name="line-26"></a><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">TH</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">GHC</span><span class="hs-operator">.</span><span class="hs-identifier">Generics</span><span>
+</span><a name="line-29"></a><span>
+</span><a name="line-30"></a><span class="hs-comment">-- | Status of a Todo</span><span>
+</span><a name="line-31"></a><span class="hs-keyword">data</span><span> </span><a name="Status"><a href="Types.html#Status"><span class="hs-identifier">Status</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="Open"><a href="Types.html#Open"><span class="hs-identifier">Open</span></a></a><span> </span><span class="hs-comment">-- ^ not yet started</span><span>
+</span><a name="line-32"></a><span>            </span><span class="hs-glyph">|</span><span> </span><a name="InProgress"><a href="Types.html#InProgress"><span class="hs-identifier">InProgress</span></a></a><span> </span><span class="hs-comment">-- ^ started but not finished</span><span>
+</span><a name="line-33"></a><span>            </span><span class="hs-glyph">|</span><span> </span><a name="Closed"><a href="Types.html#Closed"><span class="hs-identifier">Closed</span></a></a><span> </span><span class="hs-comment">-- ^ finished</span><span>
+</span><a name="line-34"></a><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Show</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Read</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Ord</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Generic</span><span class="hs-special">)</span><span>
+</span><a name="line-35"></a><span class="hs-identifier hs-var">derivePersistField</span><span> </span><span class="hs-string">&quot;Status&quot;</span><span>
+</span><a name="line-36"></a><span class="hs-comment">-- ^ PersistFieldSql instances for Status</span><span>
+</span><a name="line-37"></a><a href="#local-6989586621679095077"><span class="hs-identifier hs-var">deriveJSON</span></a><span> </span><a href="#local-6989586621679095077"><span class="hs-identifier hs-var">defaultOptions</span></a><span> </span><span class="hs-char">''Status
+-- ^ FromJSON and ToJSON instances for Status
+
+-- | Priority of a Todo
+data Priority = Low -- ^ Low Priority
+              | Middle -- ^ Medium Priority
+              | High -- ^ High Priority
+  deriving (Show, Read, Eq, Ord, Generic)
+derivePersistField &quot;Priority&quot;
+-- ^ PersistFieldSql instances for Priority
+deriveJSON defaultOptions ''Priority
+-- ^ FromJSON and ToJSON instances for Priority
+
+-- | A Dependency element to be used as JSON for the TaskAPI
+data Dependency = Dependency
+  { depends :: Int -- ^ the key of the task to depend on
+  , major   :: Int -- ^ major release number
+  , minor   :: Int -- ^ mionr release number
+  } deriving (Show, Read, Eq, Ord, Generic)
+deriveJSON defaultOptions ''Dependency
+-- ^ FromJSON and ToJSON instances for Dependency
+
+-- | A Task element to be used as JSON for the TaskAPI
+data Task = Task
+  { name         :: String -- ^ the name of the task
+  , dependencies :: [Dependency] --dependencies of the task
+  } deriving (Show, Read, Eq, Ord, Generic)
+deriveJSON defaultOptions ''Task
+-- ^ FromJSON and ToJSON instances for Task
+</span></pre></body></html>

@@ -1,5 +1,0 @@
-**/.stack-work/*
-*.cabal
-*.db
-*dump*
-*.th.hs
