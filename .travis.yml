@@ -25,7 +25,7 @@ script:
 
 deploy:
   provider: pages
-  local_dir: $RootDir/.stack-work/dist/x86_64-linux/Cabal-1.24.2.0/doc/html/dash-server/
+  local_dir: $RootDir/dash-server/.stack-work/dist/x86_64-linux/Cabal-1.24.2.0/doc/html/dash-server/
   skip-cleanup: true
   github-token: $TravisToken  # Set in travis-ci.org dashboard, marked secure
   keep-history: true
