@@ -270,7 +270,7 @@ module Todo
 
 -- | The Rest API hadling todos. All its services' uri- paths start with
 --   "<i>todo</i>"
-type TodoAPI = "todo" :> (Get '[JSON] [Todo] :<|> (("add" :> (ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo))) :<|> ((Capture "id" Int64 :> Get '[JSON] Todo) :<|> (("remove" :> (Capture "id" Int64 :> Get '[JSON] ())) :<|> ("check" :> Get '[JSON] [Todo])))))
+type TodoAPI = "todo" :> (Get '[JSON] [Todo] :<|> (("addCategory" :> (QueryParam "category" String :> Post '[JSON] (Key Category))) :<|> (("add" :> (ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo))) :<|> ((Capture "id" Int64 :> Get '[JSON] Todo) :<|> (("remove" :> (Capture "id" Int64 :> Get '[JSON] ())) :<|> ("check" :> Get '[JSON] [Todo]))))))
 
 -- | Implementation of the TodoAPI
 todoServer :: ConnectionPool -> Server TodoAPI

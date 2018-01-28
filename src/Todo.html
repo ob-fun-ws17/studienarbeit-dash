@@ -33,6 +33,7 @@ This module contains the TodoAPI and its implementation.
 </span><a name="line-33"></a><span class="hs-comment">-- All its services' uri- paths start with &quot;/todo/&quot;</span><span>
 </span><a name="line-34"></a><span class="hs-keyword">type</span><span> </span><a name="TodoAPI"><a href="Todo.html#TodoAPI"><span class="hs-identifier">TodoAPI</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;todo&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span>
 </span><a name="line-35"></a><span>  </span><span class="hs-special">(</span><span>     </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-char">'[JSON] [Todo]
+  :&lt;|&gt; &quot;addCategory&quot; :&gt; QueryParam &quot;category&quot; String :&gt; Post '[JSON] (Key Category)
   :&lt;|&gt; &quot;add&quot; :&gt; ReqBody '[JSON] Todo :&gt; Get '[JSON] (Key Todo)
   :&lt;|&gt; Capture &quot;id&quot; Int64 :&gt;  Get '[JSON] Todo
   :&lt;|&gt; &quot;remove&quot; :&gt; Capture &quot;id&quot; Int64 :&gt; Get '[JSON] ()
@@ -43,6 +44,7 @@ This module contains the TodoAPI and its implementation.
 todoServer :: ConnectionPool -- ^ the pool of database connections to be used
            -&gt; Server TodoAPI -- ^ the server for the TodoAPI
 todoServer pool = getAllTodos
+             :&lt;|&gt; addCategory
              :&lt;|&gt; addTodo
              :&lt;|&gt; getTodo
              :&lt;|&gt; removeTodo
@@ -50,6 +52,12 @@ todoServer pool = getAllTodos
   where
     getAllTodos :: Handler [Todo]
     getAllTodos = loadAllTodos pool
+
+    addCategory :: Maybe String -&gt; Handler (Key Category)
+    addCategory param =
+      case param of
+        Just a  -&gt; runDb pool $ insert $ Category a
+        Nothing -&gt; throwError err404
 
     addTodo :: Todo -&gt; Handler (Key Todo)
     addTodo x = runDb pool $ insert x

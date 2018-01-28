@@ -20,7 +20,7 @@ This module contains the TaskAPI and its implementation.
 </span><a name="line-20"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="Task.html#sortDep"><span class="hs-identifier hs-var">sortDep</span></a><span>
 </span><a name="line-21"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><a name="line-22"></a><span>
-</span><a name="line-23"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Monoid</span><span>
+</span><a name="line-23"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Arrow</span><span>
 </span><a name="line-24"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">String</span><span>
 </span><a name="line-25"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Database</span><span class="hs-operator">.</span><span class="hs-identifier">Persist</span><span class="hs-operator">.</span><span class="hs-identifier">Sql</span><span>
 </span><a name="line-26"></a><span class="hs-keyword">import</span><span>           </span><a href="Entity.html"><span class="hs-identifier">Entity</span></a><span>
@@ -30,9 +30,9 @@ This module contains the TaskAPI and its implementation.
 </span><a name="line-30"></a><span class="hs-comment">-- |  The Rest API hadling tasks.</span><span>
 </span><a name="line-31"></a><span class="hs-comment">-- All its services' uri- paths start with &quot;/task/&quot;</span><span>
 </span><a name="line-32"></a><span class="hs-keyword">type</span><span> </span><a name="TaskAPI"><a href="Task.html#TaskAPI"><span class="hs-identifier">TaskAPI</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;task&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span>
-</span><a name="line-33"></a><span>  </span><span class="hs-special">(</span><span>    </span><span class="hs-string">&quot;add&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span> </span><span class="hs-identifier hs-type">ReqBody</span><span> </span><span class="hs-char">'[JSON] Task :&gt; Get '[JSON] [DbDependency]
+</span><a name="line-33"></a><span>     </span><span class="hs-special">(</span><span> </span><span class="hs-string">&quot;add&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span> </span><span class="hs-identifier hs-type">ReqBody</span><span> </span><span class="hs-char">'[JSON] Task :&gt; Get '[JSON] [DbDependency]
   :&lt;|&gt; &quot;sort&quot; :&gt; Get '[JSON] [Int]
-  )
+     )
 
 -- | Implementation of the TaskAPI
 taskServer :: ConnectionPool -- ^ the pool of database connections to be used
@@ -57,13 +57,12 @@ taskServer pool = addTask
 
     sort :: Handler [Int]
     sort = do
-      depTuple &lt;- loadDep pool
+      depTuple &lt;- loadAllDep pool
       taskEntityList &lt;- runDb pool $ selectList ([] :: [Filter DbTask]) []
       return $ sortDep $ concatDep (map (fromIntegral . fromSqlKey . entityKey) taskEntityList) depTuple
 
-
-loadDep :: ConnectionPool -&gt; Handler [(Int,Int)]
-loadDep pool =
+loadAllDep :: ConnectionPool -&gt; Handler [(Int,Int)]
+loadAllDep pool =
   fmap ( map (depAsTuple . entityVal)) $ runDb pool $ selectList ([] :: [Filter DbDependency]) []
   where
     depAsTuple :: DbDependency -&gt; (Int, Int)
@@ -80,12 +79,11 @@ concatDep t d =
 sortDep :: [(Int, [Int])] -- ^ list of tasks with coresponding dependencies
         -&gt; [Int] -- ^ list of dependencies where n has to be used before n+1
 sortDep [] = []
-sortDep xs = withoutParent &lt;&gt; sortDep (map removeAlreadyListed withParent)
+sortDep xs =
+  let sorted = map fst $ filter (\(_,y) -&gt; null y) xs
+      removed = removeDep sorted $ filter (\(_,y) -&gt; not $ null y) xs
+  in sorted ++ sortDep removed
   where
-    withoutParent :: [Int]
-    withoutParent = map fst $ filter (null . snd) xs
-    withParent :: [(Int,[Int])]
-    withParent = filter (\(x,_) -&gt; x `notElem` withoutParent) xs
-    removeAlreadyListed :: (Int, [Int]) -&gt; (Int, [Int])
-    removeAlreadyListed (x, ys)= (x, filter (`elem` withoutParent) ys)
+    removeDep :: [Int] -&gt; [(Int,[Int])] -&gt; [(Int,[Int])]
+    removeDep alreadyContained = map (second (filter (`notElem` alreadyContained)))
 </span></pre></body></html>

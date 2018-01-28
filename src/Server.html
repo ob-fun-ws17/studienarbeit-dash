@@ -42,61 +42,27 @@ and starts the Servant server.
 </span><a name="line-42"></a><span class="hs-comment">-- database</span><span>
 </span><a name="line-43"></a><span class="hs-identifier">initApp</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">FilePath</span><span> </span><span class="hs-comment">-- ^ the path for the database file</span><span>
 </span><a name="line-44"></a><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><span class="hs-identifier hs-type">Application</span><span>
-</span><a name="line-45"></a><a name="initApp"><a href="Server.html#initApp"><span class="hs-identifier">initApp</span></a></a><span> </span><a name="local-6989586621679461198"><a href="#local-6989586621679461198"><span class="hs-identifier">file</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-46"></a><span>  </span><a name="local-6989586621679461199"><a href="#local-6989586621679461199"><span class="hs-identifier">pool</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">runStderrLoggingT</span><span> </span><span class="hs-operator hs-var">$</span><span>
-</span><a name="line-47"></a><span>    </span><span class="hs-identifier hs-var">createSqlitePool</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">cs</span><span> </span><a href="#local-6989586621679461198"><span class="hs-identifier hs-var">file</span></a><span class="hs-special">)</span><span> </span><span class="hs-number">5</span><span>
+</span><a name="line-45"></a><a name="initApp"><a href="Server.html#initApp"><span class="hs-identifier">initApp</span></a></a><span> </span><a name="local-6989586621679461991"><a href="#local-6989586621679461991"><span class="hs-identifier">file</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a name="line-46"></a><span>  </span><a name="local-6989586621679461992"><a href="#local-6989586621679461992"><span class="hs-identifier">pool</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">runStderrLoggingT</span><span> </span><span class="hs-operator hs-var">$</span><span>
+</span><a name="line-47"></a><span>    </span><span class="hs-identifier hs-var">createSqlitePool</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">cs</span><span> </span><a href="#local-6989586621679461991"><span class="hs-identifier hs-var">file</span></a><span class="hs-special">)</span><span> </span><span class="hs-number">5</span><span>
 </span><a name="line-48"></a><span>
-</span><a name="line-49"></a><span>  </span><span class="hs-identifier hs-var">runSqlPool</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">runMigration</span><span> </span><a href="Entity.html#migrateAll"><span class="hs-identifier hs-var">migrateAll</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621679461199"><span class="hs-identifier hs-var">pool</span></a><span>
-</span><a name="line-50"></a><span>  </span><span class="hs-identifier hs-var">return</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="Server.html#app"><span class="hs-identifier hs-var">app</span></a><span> </span><a href="#local-6989586621679461199"><span class="hs-identifier hs-var">pool</span></a><span>
+</span><a name="line-49"></a><span>  </span><span class="hs-identifier hs-var">runSqlPool</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">runMigration</span><span> </span><a href="Entity.html#migrateAll"><span class="hs-identifier hs-var">migrateAll</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621679461992"><span class="hs-identifier hs-var">pool</span></a><span>
+</span><a name="line-50"></a><span>  </span><span class="hs-identifier hs-var">return</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="Server.html#app"><span class="hs-identifier hs-var">app</span></a><span> </span><a href="#local-6989586621679461992"><span class="hs-identifier hs-var">pool</span></a><span>
 </span><a name="line-51"></a><span>
 </span><a name="line-52"></a><span class="hs-keyword">type</span><span> </span><a name="API"><a href="Server.html#API"><span class="hs-identifier">API</span></a></a><span> </span><span class="hs-glyph">=</span><span>
-</span><a name="line-53"></a><span>             </span><span class="hs-string">&quot;test&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-char">'[JSON] (Test)
-             :&lt;|&gt; &quot;testAddJSON&quot; :&gt; ReqBody '[JSON] Test :&gt; Post '[JSON] (Key Test)
-             :&lt;|&gt; &quot;testAddParam&quot; :&gt; QueryParam &quot;param&quot; String :&gt; Post '[JSON] (String)
-             :&lt;|&gt; &quot;testGetJSON&quot; :&gt; QueryParam &quot;param&quot; String :&gt; Post '[JSON] (Test)
-             :&lt;|&gt; &quot;addCategory&quot; :&gt; QueryParam &quot;category&quot; String :&gt; Post '[JSON] (Key Category)
-             :&lt;|&gt; TodoAPI
-             :&lt;|&gt; TaskAPI
+</span><a name="line-53"></a><span>          </span><span class="hs-string">&quot;test&quot;</span><span> </span><span class="hs-operator">:&gt;</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-char">'[JSON] (Test)
+          :&lt;|&gt; TodoAPI
+          :&lt;|&gt; TaskAPI
 
 server :: ConnectionPool -&gt; Server API
 server pool =
        test
-  :&lt;|&gt; testAddJSON
-  :&lt;|&gt; testAddParam
-  :&lt;|&gt; testGetJSON
-  :&lt;|&gt; addCategory
   :&lt;|&gt; todoServer pool
   :&lt;|&gt; taskServer pool
 
   where
     test :: Handler Test
     test = return (Test &quot;It works!&quot;)
-
-    testAddJSON :: Test -&gt; Handler (Key Test)
-    testAddJSON testJson = runDb pool $ insert testJson
-
-    testAddParam :: Maybe String -&gt; Handler String
-    testAddParam testParam =
-      case testParam of
-        Just a  -&gt; fmap (show . fromSqlKey ) (runDb pool (insert $ Test a))
-        Nothing -&gt; throwError err404
-  --
-    testGetJSON :: Maybe String -&gt; Handler (Test)
-    testGetJSON param =
-      case param of
-        Just a -&gt; do
-          maybeTest &lt;- runDb pool (selectFirst [TestTestString ==. a] [])
-          case maybeTest of
-            Just test -&gt; return $ entityVal test
-            Nothing   -&gt; throwError err404
-
-        Nothing -&gt; throwError err404
-
-    addCategory :: Maybe String -&gt; Handler (Key Category)
-    addCategory param =
-      case param of
-        Just a  -&gt; runDb pool $ insert $ Category a
-        Nothing -&gt; throwError err404
 
 api :: Proxy API
 api = Proxy
