@@ -9,7 +9,7 @@ wurde se zu einem Testprojekt für verschiedene Haskell-Technologien.
 
 ## Bauen und Ausführen
 
-Diese Anwendung kann mit stack gebaut aund ausgeführt werden.
+Diese Anwendung kann mit stack gebaut und ausgeführt werden.
 Nach dem Clonen wird hierzu im Hauptverzeichnis ausgeführt:
 ```Bash
 stack build
@@ -17,7 +17,14 @@ stack exec dash-server
 ```
 
 Nun läuft die Anwendung lokal und hört auf Port **8080**.
-Die Funktionsfähigkeit kann mit `http://localhost:8080/test` überprüft werden.
+Die Funktionsfähigkeit des Servers kann mit `http://localhost:8080/test` überprüft werden.
+
+## Test
+
+Die Tests zur Anwendung werden ausgeführt mit:
+```Bash
+stack test
+```
 
 ## Eingesetzte Technologien
 
@@ -32,7 +39,7 @@ Die wesentliche API ist in zwei Teile aufgeteilt: *Todo* und *Task*.
 
 ### Todo
 
-Todo stellt die Funktionalitäten für eine Todo-Liste zur Verfühgung.
+Todo stellt die Funktionalitäten für eine Todo-Liste zur Verfügung.
 
 Beispiel Todo:
 
@@ -74,7 +81,7 @@ Listet alle Todos auf deren Deadline vor dem heutigen Tag liegt.<br>
 
 ### Task
 
-Task stellt die vereinfachten Funktionalitäten zum Auflösen eines Abhängigkeitsbauems dar.
+Task stellt die vereinfachten Funktionalitäten zum Auflösen eines Abhängigkeitsbaums dar.
 
 Beispiel Task
 
