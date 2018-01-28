@@ -19,10 +19,12 @@ stack exec dash-server
 Nun läuft die Anwendung lokal und hört auf Port **8080**.
 Die Funktionsfähigkeit kann mit `http://localhost:8080/test` überprüft werden.
 
-## Aufbau
+## Eingesetzte Technologien
 
 Die Anwendung besteht aus einem servant-Webserver und einer SQLite 3 Datenbank. Auf die Datenbank wird zur 
 Vermeidung von möglicherweise fehlerhaften SQL-Abfragen mit Hilfe von persist zugegriffen.
+
+Die Generierung des Datenbank Schemas erfolgt mit Hilfe der Haskell-Spracherweiderungen *TamplateHaskell* und *QuasieQuotes*. Diese ermöglichen eine einfache Deklaration des Schemas. Alle nötigen Datentypen und Instanzen in Haskell werden zur Compilezeit generiert.
 
 ## WEB-API
 
@@ -34,13 +36,13 @@ Todo stellt die Funktionalitäten für eine Todo-Liste zur Verfühgung.
 
 Beispiel Todo:
 
-```JSON
+```
 {
-	"todoContext":		"Context", 	//Name des Todo
-    "todoStatus":		"Open",		//Status
-    "todoCategory":		1,			//ID der Kategorie
-    "todoPriority":		"High",		//Priorität
-    "todoDeadline":		"2017-11-17",	//Deadline
+	"todoContext":		"Context", 	// Name des Todo
+    "todoStatus":		"Open",		// Status
+    "todoCategory":		1,			// ID der Kategorie
+    "todoPriority":		"High",		// Priorität
+    "todoDeadline":		"2017-11-17",	// Deadline
     "todoDuration":		1			// Dauer
 }
 ```
@@ -68,3 +70,34 @@ Entfernt das Todo mit der ID.<br>
 
 - **`GET http://localhost:8080/todo/check`**<br>
 Listet alle Todos auf deren Deadline vor dem heutigen Tag liegt.<br>
+
+
+### Task
+
+Task stellt die vereinfachten Funktionalitäten zum Auflösen eines Abhängigkeitsbauems dar.
+
+Beispiel Task
+
+```
+{
+  "name":	a", 		// Name der Task
+  "dependencies":		// Array mit Abhängigkeiten
+  [
+	  {
+       	"depends":	1,	// ID der Task
+        "major":	1,	// Releasenummer
+        "minor":	0	// Patchnummer
+      }
+  ]
+}
+```
+
+
+Alle relevanten URLs hierzu sind unter `http://localhost:8080/task` zu erreichen:
+
+- **`GET http://localhost:8080/task/add`**<br>
+Fügt eine neue Task hinzu. Erwartet die Task als Request-Body. (Die benutzten Task-IDs der Abhängigkeiten müssen existieren!)<br>
+**Antwort**: ID der neu hinzugefügten Task<br>
+
+- **`GET http://localhost:8080/task/sort`**<br>
+Liefert die IDs aller Abhängigkeiten zurück, so dass gilt: Wenn n vor n+1 verfügbar ist, sind  sind alle Abhängigkeiten erfüllt.
