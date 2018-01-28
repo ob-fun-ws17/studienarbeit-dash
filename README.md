@@ -4,7 +4,7 @@ ___
 
 Dies ist eine Studienarbeit für das Fach Funktionale Programmierung im WS 17/18.
 Dash ist ursprünglich als Backend für ein Dashboard gedacht gewesen. Mangels interessanten Anwendungsfällen 
-wurde se zu einem Testprojekt für verschiedene Haskell-Technologien.
+wurde es zu einem Testprojekt für verschiedene Haskell-Technologien.
 
 
 ## Bauen und Ausführen
