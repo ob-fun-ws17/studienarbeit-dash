@@ -40,10 +40,10 @@ Beispiel Todo:
 {
     "todoContext":		"Context", 	// Name des Todo
     "todoStatus":		"Open",		// Status
-    "todoCategory":		1,			// ID der Kategorie
+    todoCategory":		1,		// ID der Kategorie
     "todoPriority":		"High",		// Priorität
     "todoDeadline":		"2017-11-17",	// Deadline
-    "todoDuration":		1			// Dauer
+    "todoDuration":		1		// Dauer
 }
 ```
 
