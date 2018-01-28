@@ -50,45 +50,19 @@ initApp file = do
   return $ app pool
 
 type API =
-             "test" :> Get '[JSON] (Test)
-             :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
-             :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
-             :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-             :<|> TodoAPI
-             :<|> TaskAPI
+          "test" :> Get '[JSON] (Test)
+          :<|> TodoAPI
+          :<|> TaskAPI
 
 server :: ConnectionPool -> Server API
 server pool =
        test
-  :<|> testAddJSON
-  :<|> testAddParam
-  :<|> testGetJSON
   :<|> todoServer pool
   :<|> taskServer pool
 
   where
     test :: Handler Test
     test = return (Test "It works!")
-
-    testAddJSON :: Test -> Handler (Key Test)
-    testAddJSON testJson = runDb pool $ insert testJson
-
-    testAddParam :: Maybe String -> Handler String
-    testAddParam testParam =
-      case testParam of
-        Just a  -> fmap (show . fromSqlKey ) (runDb pool (insert $ Test a))
-        Nothing -> throwError err404
-  --
-    testGetJSON :: Maybe String -> Handler (Test)
-    testGetJSON param =
-      case param of
-        Just a -> do
-          maybeTest <- runDb pool (selectFirst [TestTestString ==. a] [])
-          case maybeTest of
-            Just test -> return $ entityVal test
-            Nothing   -> throwError err404
-
-        Nothing -> throwError err404
 
 api :: Proxy API
 api = Proxy
