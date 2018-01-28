@@ -54,7 +54,6 @@ type API =
              :<|> "testAddJSON" :> ReqBody '[JSON] Test :> Post '[JSON] (Key Test)
              :<|> "testAddParam" :> QueryParam "param" String :> Post '[JSON] (String)
              :<|> "testGetJSON" :> QueryParam "param" String :> Post '[JSON] (Test)
-             :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
              :<|> TodoAPI
              :<|> TaskAPI
 
@@ -64,7 +63,6 @@ server pool =
   :<|> testAddJSON
   :<|> testAddParam
   :<|> testGetJSON
-  :<|> addCategory
   :<|> todoServer pool
   :<|> taskServer pool
 
@@ -90,12 +88,6 @@ server pool =
             Just test -> return $ entityVal test
             Nothing   -> throwError err404
 
-        Nothing -> throwError err404
-
-    addCategory :: Maybe String -> Handler (Key Category)
-    addCategory param =
-      case param of
-        Just a  -> runDb pool $ insert $ Category a
         Nothing -> throwError err404
 
 api :: Proxy API

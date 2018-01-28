@@ -46,7 +46,7 @@ spec = do
       checkTodoDeadline' [] today `shouldBe` []
 
 addTestCategory :: WaiExpectation
-addTestCategory = post "/addCategory/?category=Job" "" `shouldRespondWith` "1"
+addTestCategory = post "/todo/addCategory/?category=Job" "" `shouldRespondWith` "1"
 
 testTodoOfDay :: Day -> String
 testTodoOfDay day = "{\"todoContext\":\"Context\",\"todoStatus\":\"Open\",\"todoCategory\":1,\"todoPriority\":\"High\",\"todoDeadline\":\""

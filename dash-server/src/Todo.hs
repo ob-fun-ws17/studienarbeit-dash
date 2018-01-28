@@ -33,6 +33,7 @@ import           Entity
 -- All its services' uri- paths start with "/todo/"
 type TodoAPI = "todo" :>
   (     Get '[JSON] [Todo]
+  :<|> "addCategory" :> QueryParam "category" String :> Post '[JSON] (Key Category)
   :<|> "add" :> ReqBody '[JSON] Todo :> Get '[JSON] (Key Todo)
   :<|> Capture "id" Int64 :>  Get '[JSON] Todo
   :<|> "remove" :> Capture "id" Int64 :> Get '[JSON] ()
@@ -43,6 +44,7 @@ type TodoAPI = "todo" :>
 todoServer :: ConnectionPool -- ^ the pool of database connections to be used
            -> Server TodoAPI -- ^ the server for the TodoAPI
 todoServer pool = getAllTodos
+             :<|> addCategory
              :<|> addTodo
              :<|> getTodo
              :<|> removeTodo
@@ -50,6 +52,12 @@ todoServer pool = getAllTodos
   where
     getAllTodos :: Handler [Todo]
     getAllTodos = loadAllTodos pool
+
+    addCategory :: Maybe String -> Handler (Key Category)
+    addCategory param =
+      case param of
+        Just a  -> runDb pool $ insert $ Category a
+        Nothing -> throwError err404
 
     addTodo :: Todo -> Handler (Key Todo)
     addTodo x = runDb pool $ insert x
