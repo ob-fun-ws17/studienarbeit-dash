@@ -38,7 +38,7 @@ Beispiel Todo:
 
 ```
 {
-	"todoContext":		"Context", 	// Name des Todo
+    "todoContext":		"Context", 	// Name des Todo
     "todoStatus":		"Open",		// Status
     "todoCategory":		1,			// ID der Kategorie
     "todoPriority":		"High",		// Priorität
